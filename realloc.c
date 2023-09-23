@@ -1,77 +1,62 @@
 #include "shell.h"
 
 /**
- **_memconstbyte - populates mem wth const bytes
- *@memalloc: d pter to d mem allocated
- *@popubyte: d byte to occupy *ptr memalloc with
- *@byteamnt: the amnt of bytes to be populated
- *Return: memalloc -- a pter to d memory area
+ **_memset - fills memory with a constant byte
+ *@s: the pointer to the memory area
+ *@b: the byte to fill *s with
+ *@n: the amount of bytes to be filled
+ *Return: (s) a pointer to the memory area s
  */
-
-char *_memconstbyte(char *memalloc, char popubyte, unsigned int byteamnt)
+char *_memset(char *s, char b, unsigned int n)
 {
-	unsigned int iterator;
+	unsigned int i;
 
-	iterator = 0;
-	while (iterator < byteamnt)
-	{
-		memalloc[iterator] = popubyte;
-		iterator++;
-	}
-
-	return (memalloc);
+	for (i = 0; i < n; i++)
+		s[i] = b;
+	return (s);
 }
 
 /**
- * disectfree - frez strng of strngs
- * @strostrs: str of strs
+ * ffree - frees a string of strings
+ * @pp: string of strings
  */
-
-void disectfree(char **strostrs)
+void ffree(char **pp)
 {
-	char **a = strostrs;
+	char **a = pp;
 
-	if (!strostrs)
+	if (!pp)
 		return;
-
-	while (*strostrs)
-		free(*strostrs++);
-
+	while (*pp)
+		free(*pp++);
 	free(a);
 }
 
 /**
- * _my_realloc - reallocs blocks of mem
- * @pter: pter 2 prev malloc
- * @siz_prev: byte size of prev blck
- * @siz_new: byte size of new blck
- * Return: pter to dblok
+ * _realloc - reallocates a block of memory
+ * @ptr: pointer to previous malloc'ated block
+ * @old_size: byte size of previous block
+ * @new_size: byte size of new block
+ *
+ * Return: pointer to da ol'block nameen.
  */
-
-void *_my_realloc(void *pter, unsigned int siz_prev, unsigned int siz_new)
+void *_realloc(void *ptr, unsigned int old_size, unsigned int new_size)
 {
-	char *ptersvar;
+	char *p;
 
-	if (!pter)
-		return (malloc(siz_new));
+	if (!ptr)
+		return (malloc(new_size));
+	if (!new_size)
+		return (free(ptr), NULL);
+	if (new_size == old_size)
+		return (ptr);
 
-	if (!siz_new)
-		return (free(pter), NULL);
-
-	if (siz_new == siz_prev)
-		return (pter);
-
-	ptersvar = malloc(siz_new);
-
-	if (!ptersvar)
+	p = malloc(new_size);
+	if (!p)
 		return (NULL);
 
-	siz_prev = siz_prev < siz_new ? siz_prev : siz_new;
-
-	while (siz_prev--)
-		ptersvar[siz_prev] = ((char *)pter)[siz_prev];
-
-	free(pter);
-
-	return (ptersvar);
+	old_size = old_size < new_size ? old_size : new_size;
+	while (old_size--)
+		p[old_size] = ((char *)ptr)[old_size];
+	free(ptr);
+	return (p);
 }

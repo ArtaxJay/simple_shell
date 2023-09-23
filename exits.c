@@ -1,74 +1,74 @@
 #include "shell.h"
 
 /**
- **_copy_strns - the func copies strs
- *@dstnatn: the destination the strs are to be copied to
- *@source: pointer source strs
- *@amnt: the number of characs to copy
- *Return: returns the concatd strs
+ **_strncpy - copies a string
+ *@dest: the destination string to be copied to
+ *@src: the source string
+ *@n: the amount of characters to be copied
+ *Return: the concatenated string
  */
-
-char *_copy_strns(char *dstnatn, char *source, int amnt)
+char *_strncpy(char *dest, char *src, int n)
 {
-	int ivar, jvar;
-	char *strsconcat = dstnatn;
+	int i, j;
+	char *s = dest;
 
-	for (ivar = 0; source[ivar] != '\0' && ivar < amnt - 1; ivar++)
-		dstnatn[ivar] = source[ivar];
-
-	if (ivar < amnt)
+	i = 0;
+	while (src[i] != '\0' && i < n - 1)
 	{
-		jvar = ivar;
-		while (jvar < amnt)
+		dest[i] = src[i];
+		i++;
+	}
+	if (i < n)
+	{
+		j = i;
+		while (j < n)
 		{
-			dstnatn[jvar] = '\0';
-			jvar++;
+			dest[j] = '\0';
+			j++;
 		}
 	}
-	return (strsconcat);
+	return (s);
 }
 
 /**
- **_add_two_strs - concatenates two strings
- *@firststr: the first string
- *@secstr: the second string
- *@byteamnt: the amount of bytes to be maximally used
- *Return: returns concat strs
+ **_strncat - concatenates two strings
+ *@dest: the first string
+ *@src: the second string
+ *@n: the amount of bytes to be maximally used
+ *Return: the concatenated string
  */
-
-char *_add_two_strs(char *firststr, char *secstr, int byteamnt)
+char *_strncat(char *dest, char *src, int n)
 {
-	int itera, jvar;
-	char *strsconcat = firststr;
+	int i, j;
+	char *s = dest;
 
-	for (itera = 0; firststr[itera] != '\0'; itera++)
-		;
-
-	for (jvar = 0; secstr[jvar] != '\0' && jvar < byteamnt; jvar++)
+	i = 0;
+	j = 0;
+	while (dest[i] != '\0')
+		i++;
+	while (src[j] != '\0' && j < n)
 	{
-		firststr[itera] = secstr[jvar];
-		itera++;
+		dest[i] = src[j];
+		i++;
+		j++;
 	}
-
-	if (jvar < byteamnt)
-		firststr[itera] = '\0';
-
-	return (strsconcat);
+	if (j < n)
+		dest[i] = '\0';
+	return (s);
 }
 
 /**
- **_loc_char - finds characs in passed-parsed strs
- *@strparsed: passed strng to parse
- *@charlk: charac to find
- *Return: --strparsed-- ptr to the mem area
+ **_strchr - locates a character in a string
+ *@s: the string to be parsed
+ *@c: the character to look for
+ *Return: (s) a pointer to the memory area s
  */
-
-char *_loc_char(char *strparsed, char charlk)
+char *_strchr(char *s, char c)
 {
 	do {
-		if (*strparsed == charlk)
-			return (strparsed);
-	} while (*strparsed++ != '\0');
+		if (*s == c)
+			return (s);
+	} while (*s++ != '\0');
 
 	return (NULL);
 }

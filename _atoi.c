@@ -1,64 +1,59 @@
 #include "shell.h"
 
 /**
- * interacshell - Will return `TRUE` if shell is in INTERACTIVE MODE
- * @info: the address to the information_t structure
- * Return: returns 1 if INTERACTIVE MODE successfully, 0 if failed
+ * interactive - returns true if shell is interactive mode
+ * @info: struct address
+ *
+ * Return: 1 if interactive mode, 0 otherwise
  */
-
-int interacshell(information_t *info)
+int interactive(info_t *info)
 {
 	return (isatty(STDIN_FILENO) && info->readfd <= 2);
 }
 
 /**
- * chk_for_delim - This func checks if a charac is a delimetre
- * @c: the argument char to be checked
- * @delim: the delimetre str argument
- * Return: returns 1 if TRUE,while 0 is returned if FALSE
+ * is_delim - checks if character is a delimeter
+ * @c: the char to check
+ * @delim: the delimeter string
+ * Return: 1 if true, 0 if false
  */
-int chk_for_delim(char c, char *delim)
+int is_delim(char c, char *delim)
 {
 	while (*delim)
-	{
 		if (*delim++ == c)
 			return (1);
-	}
 	return (0);
 }
 
 /**
- *_chk_for_alpha - The function will check for alphabe charac
- *@c: The alphabe charac to input
- *Return: 1 if c is an alphabe, return 0 in case of otherwise
+ *_isalpha - checks for alphabetic character
+ *@c: The character to input
+ *Return: 1 if c is alphabetic, 0 otherwise
  */
 
-int _chk_for_alpha(int c)
+int _isalpha(int c)
 {
-	if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))
+	if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
 		return (1);
 	else
 		return (0);
 }
 
 /**
- *_conv_str_int - This funct converts strs to ints
- *@s: holds the var strs to be converted to ints
- *Return: NULL (0) if no numbers in str
+ *_atoi - converts a string to an integer
+ *@s: the string to be converted
+ *Return: 0 if no numbers in string, converted number otherwise
  */
 
-int _conv_str_int(char *s)
+int _atoi(char *s)
 {
-	int i;
-	int signal = 1, flag = 0, output;
+	int i, sign = 1, flag = 0, output;
 	unsigned int result = 0;
 
 	for (i = 0;  s[i] != '\0' && flag != 2; i++)
 	{
 		if (s[i] == '-')
-		{
-		signal *= -1;
-		}
+			sign *= -1;
 
 		if (s[i] >= '0' && s[i] <= '9')
 		{
@@ -67,18 +62,13 @@ int _conv_str_int(char *s)
 			result += (s[i] - '0');
 		}
 		else if (flag == 1)
-		{
 			flag = 2;
-		}
 	}
 
-	if (signal == -1)
-	{
+	if (sign == -1)
 		output = -result;
-	}
 	else
-	{
 		output = result;
-	}
+
 	return (output);
 }

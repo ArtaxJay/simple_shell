@@ -1,82 +1,78 @@
 #ifndef _SHELL_H_
 #define _SHELL_H_
 
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
-#include <sys/wait.h>
 #include <string.h>
 #include <sys/types.h>
-#include <limits.h>
-#include <errno.h>
+#include <sys/wait.h>
 #include <sys/stat.h>
-#include <signal.h>
+#include <limits.h>
 #include <fcntl.h>
+#include <errno.h>
 
+/* for read/write buffers */
+#define READ_BUF_SIZE 1024
+#define WRITE_BUF_SIZE 1024
+#define BUF_FLUSH -1
 
+/* for command chaining */
+#define CMD_NORM	0
+#define CMD_OR		1
+#define CMD_AND		2
+#define CMD_CHAIN	3
 
-/* SYMBOLIC NAMES/CONSTANTS TO WRITE AND READ CLIP_BUFFERS --- SHELL LITTLE WINDOW STORAGE */
-#define WRITE_BUFFER_SIZES 1024
-#define READ_BUFFER_SIZE 1024
-#define BUFFER_FLUSH -1
+/* for convert_number() */
+#define CONVERT_LOWERCASE	1
+#define CONVERT_UNSIGNED	2
 
-/* SYMBOLIC NAMES/CONSTANTS TO CHAIN COMMANDS */
-#define COMMAND_NORMAL	0
-#define COMMAND_LOGICAL_OR		1
-#define COMMAND_LOGICAL_AND		2
-#define COMMAND_CHAINED	3
+/* 1 if using system getline() */
+#define USE_GETLINE 0
+#define USE_STRTOK 0
 
-/* SYMBOLIC NAMES/CONSTANTS TO CONVERT NUMBERS */
-#define CONVERT_TO_LOWERCASE	1
-#define CONVERT_FROM_UNSIGNED	2
+#define HIST_FILE	".simple_shell_history"
+#define HIST_MAX	4096
 
-/* CONSTANTS FOR GETLINE() SYS CALL AND SHELL HISTORY CAPACITY */
-#define STRTOK_USED 0
-#define GETLINE_USED 0
-#define MAXIMUM_HISTORY_NUMBER	4096
-#define FILE_HISTORY	"shell_history"
-
-extern char **environment_variables;
+extern char **environ;
 
 
 /**
- * struct liststring - structured singly linked list with two variables
- * @num: this is the field number
- * @str: this variable will hold a string
- * @next: this variable will point to the next node
+ * struct liststr - singly linked list
+ * @num: the number field
+ * @str: a string
+ * @next: points to the next node
  */
-
-typedef struct liststring
+typedef struct liststr
 {
 	int num;
 	char *str;
-	struct liststring *next;
-} lists_t;
+	struct liststr *next;
+} list_t;
 
 /**
- *struct pass_info_struct - this struct contains pseudo-arguements to be passed into functions,
- *		that will allow a uniform prototype for the functions pointer struct
- *@arg: arg hold strings that will be generated from getline() call
- *@argv: array arg of strings generated from arg parameter
- *@path: path var that holds string for the current command, options and signals
- *@argc: the arg counts the number of parameters passed
- *@line_count: this arg counts errors
- *@err_num: err_num holds error codes for terminating/exit()
- *@linecount_flag: signals the number of line counts
- *@fname: this names the program filename
- *@env: stores the linked-list of local copy of the environment variables
- *@environ: stores the custom-modified copy of the environment from the Locals
- *@history: arg stores the history node of a particular command
- *@alias: arg stores the alias node of a particular command
- *@env_changed: Turns on if any of the environment vars was changed
- *@status: stores the status returned by the last executed command
- *@cmd_buf: holds the address of pointers to command buffer, and turns on if chaining
- *@cmd_buf_type: command buffer types: logical "or" ||, logical "and" &&, ;
- *@readfd: reads line input from fd of the standard library
- *@histcount: holds the number history line counted
+ *struct passinfo - contains pseudo-arguements to pass into a function,
+ *		allowing uniform prototype for function pointer struct
+ *@arg: a string generated from getline containing arguements
+ *@argv: an array of strings generated from arg
+ *@path: a string path for the current command
+ *@argc: the argument count
+ *@line_count: the error count
+ *@err_num: the error code for exit()s
+ *@linecount_flag: if on count this line of input
+ *@fname: the program filename
+ *@env: linked list local copy of environ
+ *@environ: custom modified copy of environ from LL env
+ *@history: the history node
+ *@alias: the alias node
+ *@env_changed: on if environ was changed
+ *@status: the return status of the last exec'd command
+ *@cmd_buf: address of pointer to cmd_buf, on if chaining
+ *@cmd_buf_type: CMD_type ||, &&, ;
+ *@readfd: the fd from which to read line input
+ *@histcount: the history line number count
  */
-
-typedef struct pass_info_struct
+typedef struct passinfo
 {
 	char *arg;
 	char **argv;
@@ -86,10 +82,10 @@ typedef struct pass_info_struct
 	int err_num;
 	int linecount_flag;
 	char *fname;
-	lists_t *env;
-	lists_t *history;
-	lists_t *alias;
-	char **environment_variables;
+	list_t *env;
+	list_t *history;
+	list_t *alias;
+	char **environ;
 	int env_changed;
 	int status;
 
@@ -97,146 +93,143 @@ typedef struct pass_info_struct
 	int cmd_buf_type; /* CMD_type ||, &&, ; */
 	int readfd;
 	int histcount;
-} information_t;
+} info_t;
 
-#define INFORMATION_INIT \
+#define INFO_INIT \
 {NULL, NULL, NULL, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, 0, 0, NULL, \
 	0, 0, 0}
 
 /**
- *struct builtins - will contain builtin strings and other functions related
- *@type: builtin command flag for signalling
- *@func: func
+ *struct builtin - contains a builtin string and related function
+ *@type: the builtin command flag
+ *@func: the function
  */
-
-typedef struct builtins
+typedef struct builtin
 {
 	char *type;
-	int (*func)(information_t *);
-} builtins_tbls;
+	int (*func)(info_t *);
+} builtin_table;
 
 
-/* header statements for parsers.c */
-char *search_path(information_t *, char *, char *);
-int is_command(information_t *, char *);
-char *duplicate_chars(char *, int, int);
+/* toem_shloop.c */
+int hsh(info_t *, char **);
+int find_builtin(info_t *);
+void find_cmd(info_t *);
+void fork_cmd(info_t *);
 
-/* the only func in loopshellhsh.c */
-int loopshell(char **);
+/* toem_parser.c */
+int is_cmd(info_t *, char *);
+char *dup_chars(char *, int, int);
+char *find_path(info_t *, char *, char *);
 
-/* the header funcs in errors.c */
-int _eputcharr(char);
-int _putsfinds(char *str, int fd);
-void _eeputts(char *);
-int _putsfnd(char c, int fd);
+/* loophsh.c */
+int loophsh(char **);
 
-/* the header statement for the file getenv.c */
-char **get_envment(information_t *);
-int _remenvvariable(information_t *, char *);
-int _initnewvar(information_t *, char *, char *);
+/* toem_errors.c */
+void _eputs(char *);
+int _eputchar(int);
+int _putfd(int c, int fd);
+int _putsfd(char *str, int fd);
 
-/* header statements for funcs in _string.c */
-char *_concatstr(char *, char *);
-int _compstrs(char *, char *);
-char *haystack_needle(const char *, const char *);
-int _len_of_str(char *);
+/* toem_string.c */
+int _strlen(char *);
+int _strcmp(char *, char *);
+char *starts_with(const char *, const char *);
+char *_strcat(char *, char *);
 
-/* header functs for exits.c */
-char *_add_two_strs(char *, char *, int);
-char *_copy_strns(char *, char *, int);
-char *_loc_char(char *, char);
+/* toem_string1.c */
+char *_strcpy(char *, char *);
+char *_strdup(const char *);
+void _puts(char *);
+int _putchar(int);
 
-/* the header for functions in _string1.c */
-char *_duplic_string(const char *);
-void _pout_std(char *);
-int _ptchars(char);
-char *_strscopier(char *, char *);
+/* toem_exits.c */
+char *_strncpy(char *, char *, int);
+char *_strncat(char *, char *, int);
+char *_strchr(char *, char);
 
-/* header statement for functions inside builtin.c */
-int _chgcurdir(information_t *);
-int _chngdir(information_t *);
-int _killshell(information_t *);
+/* toem_tokenizer.c */
+char **strtow(char *, char *);
+char **strtow2(char *, char);
 
-/* the header funcs for tokenizer.c */
-char **splitstrs(char *, char *);
-char **splitstrns(char *, char);
+/* toem_realloc.c */
+char *_memset(char *, char, unsigned int);
+void ffree(char **);
+void *_realloc(void *, unsigned int, unsigned int);
 
-/* header for functions inside realloc.c */
-void *_my_realloc(void *, unsigned int, unsigned int);
-char *_memconstbyte(char *, char, unsigned int);
-void disectfree(char **);
+/* toem_memory.c */
+int bfree(void **);
 
-/* the only funtion inside the memory.c file */
-int freepts(void **);
+/* toem_atoi.c */
+int interactive(info_t *);
+int is_delim(char, char *);
+int _isalpha(int);
+int _atoi(char *);
 
-/* header statement for function in errors1.c */
-int _str_to_int(char *);
-char *con_nums(long int, int, int);
-void prnt_err_msg(information_t *, char *);
-void rem_commts(char *);
-int prnt_dec_num(int, int);
+/* toem_errors1.c */
+int _erratoi(char *);
+void print_error(info_t *, char *);
+int print_d(int, int);
+char *convert_number(long int, int, int);
+void remove_comments(char *);
 
-/* header functions inside _atoi.c */
-int _conv_str_int(char *);
-int interacshell(information_t *);
-int chk_for_delim(char, char *);
-int _chk_for_alpha(int);
+/* toem_builtin.c */
+int _myexit(info_t *);
+int _mycd(info_t *);
+int _myhelp(info_t *);
 
-/* the header for builtin1.c */
-int _mimicslibalias(information_t *);
-int _lsthistory(information_t *);
+/* toem_builtin1.c */
+int _myhistory(info_t *);
+int _myalias(info_t *);
 
-/*the header function for getline.c file */
-int _myverofgetline(information_t *, char **, size_t *);
-ssize_t gets_line(information_t *);
-void handlesignals(int);
+/*toem_getline.c */
+ssize_t get_input(info_t *);
+int _getline(info_t *, char **, size_t *);
+void sigintHandler(int);
 
-/* header declaration for history.c */
-int rd_hist(information_t *info);
-int wrt_hist(information_t *info);
-char *gt_hist_fle(information_t *info);
-int chng_hist_num(information_t *info);
-int add_entry_tohist(information_t *info, char *buf, int linecount);
+/* toem_getinfo.c */
+void clear_info(info_t *);
+void set_info(info_t *, char **);
+void free_info(info_t *, int);
 
+/* toem_environ.c */
+char *_getenv(info_t *, const char *);
+int _myenv(info_t *);
+int _mysetenv(info_t *);
+int _myunsetenv(info_t *);
+int populate_env_list(info_t *);
 
-/* header statement for getinfo.c file */
-void fr_info_struct(information_t *, int);
-void init_info_struct(information_t *, char **);
-void kill_info_struct(information_t *);
+/* toem_getenv.c */
+char **get_environ(info_t *);
+int _unsetenv(info_t *, char *);
+int _setenv(info_t *, char *, char *);
 
-/* header declaration for lists.c */
-int del_dgiven_node(lists_t **, unsigned int);
-void fr_all_node_lists(lists_t **);
-lists_t *add_nd_to_list_end(lists_t **, const char *, int);
-lists_t *add_nd_to_list_start(lists_t **, const char *, int);
-size_t prnt_strelem_of_list(const lists_t *);
+/* toem_history.c */
+char *get_history_file(info_t *info);
+int write_history(info_t *info);
+int read_history(info_t *info);
+int build_history_list(info_t *info, char *buf, int linecount);
+int renumber_history(info_t *info);
 
+/* toem_lists.c */
+list_t *add_node(list_t **, const char *, int);
+list_t *add_node_end(list_t **, const char *, int);
+size_t print_list_str(const list_t *);
+int delete_node_at_index(list_t **, unsigned int);
+void free_list(list_t **);
 
-/* header statement for environ.c file */
-int _initenvvar(information_t *);
-int _prntcurenvvar(information_t *);
-int add_to_env_lst(information_t *);
-int _remenvvar(information_t *);
-char *_gtenvvarval(information_t *, const char *);
+/* toem_lists1.c */
+size_t list_len(const list_t *);
+char **list_to_strings(list_t *);
+size_t print_list(const list_t *);
+list_t *node_starts_with(list_t *, char *, int);
+ssize_t get_node_index(list_t *, list_t *);
 
-/* header statements for loop.c */
-void find_command_path(information_t *);
-int finds_cmds_builtins(information_t *);
-void forks_exec_cmd(information_t *);
-int shellhsh(information_t *, char **);
-
-/* header statement for lists1.c file */
-ssize_t gt_index_of_nodes(lists_t *, lists_t *);
-size_t len_of_lnkd_list(const lists_t *);
-lists_t *nd_with_prefix_start(lists_t *, char *, char);
-char **ret_array_of_strs(lists_t *);
-size_t prnt_all_elem_lst(const lists_t *);
-
-/* header declaration for vars.c file */
-int repl_strngs(char **, char *);
-int chck_chain_delim(information_t *, char *, size_t *);
-int repl_vars_tok_strs(information_t *);
-void chks_for_chain_status(information_t *, char *, size_t *, size_t, size_t);
-int repl_tork_alias(information_t *);
+/* toem_vars.c */
+int is_chain(info_t *, char *, size_t *);
+void check_chain(info_t *, char *, size_t *, size_t, size_t);
+int replace_alias(info_t *);
+int replace_vars(info_t *);
+int replace_string(char **, char *);
 
 #endif

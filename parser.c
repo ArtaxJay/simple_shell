@@ -1,18 +1,18 @@
 #include "shell.h"
 
 /**
- * is_command - determs if cmds || files are exec or avable in /bin
- * @paraminfo: param for struc
- * @pthway: dpath 2 dfile
- * Return: on success = 1, if not = 0
+ * is_cmd - determines if a file is an executable command
+ * @info: the info struct
+ * @path: path to the file
+ *
+ * Return: 1 if true, 0 otherwise
  */
-
-int is_command(information_t *paraminfo, char *pthway)
+int is_cmd(info_t *info, char *path)
 {
 	struct stat st;
 
-	(void)paraminfo;
-	if (!pthway || stat(pthway, &st))
+	(void)info;
+	if (!path || stat(path, &st))
 		return (0);
 
 	if (st.st_mode & S_IFREG)
@@ -23,77 +23,64 @@ int is_command(information_t *paraminfo, char *pthway)
 }
 
 /**
- * duplicate_chars - findz dupl charac
- * @pathstr: d PATHWAY 2 dstrng
- * @indxstart: d first/startng indx
- * @indxstop: d last/stoppng indx
- * Return: ret pter to new
+ * dup_chars - duplicates characters
+ * @pathstr: the PATH string
+ * @start: starting index
+ * @stop: stopping index
+ *
+ * Return: pointer to new buffer
  */
-
-char *duplicate_chars(char *pathstr, int indxstart, int indxstop)
+char *dup_chars(char *pathstr, int start, int stop)
 {
-	static char bufmaxsize[1024];
-	int frtiter = 0, seciter;
+	static char buf[1024];
+	int i = 0, k = 0;
 
-	seciter = 0
-	while (frtiter = indxstart; frtiter < indxstop)
-	{
-		if (pathstr[frtiter] != ':')
-		{
-			bufmaxsize[seciter++] = pathstr[frtiter];
-		}
-		frtiter++
-	}
-
-	bufmaxsize[seciter] = 0;
-	return (bufmaxsize);
+	for (k = 0, i = start; i < stop; i++)
+		if (pathstr[i] != ':')
+			buf[k++] = pathstr[i];
+	buf[k] = 0;
+	return (buf);
 }
 
 /**
- * search_path - finds dcurrent cmd in d PATH strng
- * @strucparam: struc param
- * @pterpathway: PATHWAY to strng
- * @clicmd: cmd to search for in /bin
- * Return: whole PATHWAY to cmd if found || NULL
+ * find_path - finds this cmd in the PATH string
+ * @info: the info struct
+ * @pathstr: the PATH string
+ * @cmd: the cmd to find
+ *
+ * Return: full path of cmd if found or NULL
  */
-
-char *search_path(information_t *strucparam, char *pterpathway, char *clicmd)
+char *find_path(info_t *info, char *pathstr, char *cmd)
 {
-	int counter;
-	int positn = 0;
-	char *pthway;
+	int i = 0, curr_pos = 0;
+	char *path;
 
-	if (!pterpathway)
+	if (!pathstr)
 		return (NULL);
-
-	if ((_len_of_str(clicmd) > 2) && haystack_needle(clicmd, "./"))
+	if ((_strlen(cmd) > 2) && starts_with(cmd, "./"))
 	{
-		if (is_command(strucparam, clicmd))
-			return (clicmd);
+		if (is_cmd(info, cmd))
+			return (cmd);
 	}
-
-	for (counter = 0; TRUE; counter++)
+	while (1)
 	{
-		if (!pterpathway[counter] || pterpathway[counter] == ':')
+		if (!pathstr[i] || pathstr[i] == ':')
 		{
-			pthway = duplicate_chars(pterpathway, positn, counter);
-
-			if (!*pthway)
-				_concatstr(pthway, clicmd);
+			path = dup_chars(pathstr, curr_pos, i);
+			if (!*path)
+				_strcat(path, cmd);
 			else
 			{
-				_concatstr(pthway, "/");
-				_concatstr(pthway, clicmd);
+				_strcat(path, "/");
+				_strcat(path, cmd);
 			}
-
-			if (is_command(strucparam, pthway))
-				return (pthway);
-
-			if (!pterpathway[counter])
+			if (is_cmd(info, path))
+				return (path);
+			if (!pathstr[i])
 				break;
-
-			positn = counter;
+			curr_pos = i;
 		}
+		i++;
 	}
 	return (NULL);
 }

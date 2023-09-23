@@ -1,99 +1,94 @@
 #include "shell.h"
 
 /**
- * **splitstrs - divides strs in2 words
- * @dstrs: d input strs to be splitted
- * @delim: delim delimeter strs to be left-out
- * Return: pter to strs
+ * **strtow - splits a string into words. Repeat delimiters are ignored
+ * @str: the input string
+ * @d: the delimeter string
+ * Return: a pointer to an array of strings, or NULL on failure
  */
 
-char **splitstrs(char *dstrs, char *delim)
+char **strtow(char *str, char *d)
 {
-	int iterater, varj, vark, varm, spltword = 0;
-	char **reslt;
+	int i, j, k, m, numwords = 0;
+	char **s;
 
-	if (dstrs == NULL || dstrs[0] == 0)
+	if (str == NULL || str[0] == 0)
 		return (NULL);
-	if (!delim)
-		delim = " ";
-	for (iterater = 0; dstrs[iterater] != '\0'; iterater++)
-		if (!chk_for_delim(dstrs[iterater],
-	delim) && (chk_for_delim(dstrs[iterater + 1],
-	delim) || !dstrs[iterater + 1]))
-			spltword++;
+	if (!d)
+		d = " ";
+	for (i = 0; str[i] != '\0'; i++)
+		if (!is_delim(str[i], d) && (is_delim(str[i + 1], d) || !str[i + 1]))
+			numwords++;
 
-	if (spltword == 0)
+	if (numwords == 0)
 		return (NULL);
-	reslt = malloc((1 + spltword) * sizeof(char *));
-	if (!reslt)
+	s = malloc((1 + numwords) * sizeof(char *));
+	if (!s)
 		return (NULL);
-	for (iterater = 0, varj = 0; varj < spltword; varj++)
+	for (i = 0, j = 0; j < numwords; j++)
 	{
-		while (chk_for_delim(dstrs[iterater], delim))
-			iterater++;
-		vark = 0;
-		while (!chk_for_delim(dstrs[iterater + vark],
-	delim) && dstrs[iterater + vark])
-			vark++;
-		reslt[varj] = malloc((vark + 1) * sizeof(char));
-		if (!reslt[varj])
+		while (is_delim(str[i], d))
+			i++;
+		k = 0;
+		while (!is_delim(str[i + k], d) && str[i + k])
+			k++;
+		s[j] = malloc((k + 1) * sizeof(char));
+		if (!s[j])
 		{
-			for (vark = 0; vark < varj; vark++)
-				free(reslt[vark]);
-			free(reslt);
+			for (k = 0; k < j; k++)
+				free(s[k]);
+			free(s);
 			return (NULL);
 		}
-		for (varm = 0; varm < vark; varm++)
-			reslt[varj][varm] = dstrs[iterater++];
-		reslt[varj][varm] = 0;
+		for (m = 0; m < k; m++)
+			s[j][m] = str[i++];
+		s[j][m] = 0;
 	}
-	reslt[varj] = NULL;
-	return (reslt);
+	s[j] = NULL;
+	return (s);
 }
 
 /**
- * **splitstrns - divides strs into words
- * @dstrs: d input strs
- * @delimvar: delim var
- * Return: ret whatever
+ * **strtow2 - splits a string into words
+ * @str: the input string
+ * @d: the delimeter
+ * Return: a pointer to an array of strings, or NULL on failure
  */
-char **splitstrns(char *dstrs, char delimvar)
+char **strtow2(char *str, char d)
 {
-	int iterator, varj, vark, varm, spltword = 0;
-	char **reslt;
+	int i, j, k, m, numwords = 0;
+	char **s;
 
-	if (dstrs == NULL || dstrs[0] == 0)
+	if (str == NULL || str[0] == 0)
 		return (NULL);
-	for (iterator = 0; dstrs[iterator] != '\0'; iterator++)
-		if ((dstrs[iterator] != delimvar && dstrs[iterator + 1] == delimvar) ||
-		    (dstrs[iterator] != delimvar && !dstrs[iterator + 1]) ||
-		    dstrs[iterator + 1] == delimvar)
-			spltword++;
-	if (spltword == 0)
+	for (i = 0; str[i] != '\0'; i++)
+		if ((str[i] != d && str[i + 1] == d) ||
+		    (str[i] != d && !str[i + 1]) || str[i + 1] == d)
+			numwords++;
+	if (numwords == 0)
 		return (NULL);
-	reslt = malloc((1 + spltword) * sizeof(char *));
-	if (!reslt)
+	s = malloc((1 + numwords) * sizeof(char *));
+	if (!s)
 		return (NULL);
-	for (iterator = 0, varj = 0; varj < spltword; varj++)
+	for (i = 0, j = 0; j < numwords; j++)
 	{
-		while (dstrs[iterator] == delimvar && dstrs[iterator] != delimvar)
-			iterator++;
-		vark = 0;
-		while (dstrs[iterator + vark] != delimvar && dstrs[iterator + vark] &&
-	dstrs[iterator + vark] != delimvar)
-			vark++;
-		reslt[varj] = malloc((vark + 1) * sizeof(char));
-		if (!reslt[varj])
+		while (str[i] == d && str[i] != d)
+			i++;
+		k = 0;
+		while (str[i + k] != d && str[i + k] && str[i + k] != d)
+			k++;
+		s[j] = malloc((k + 1) * sizeof(char));
+		if (!s[j])
 		{
-			for (vark = 0; vark < varj; vark++)
-				free(reslt[vark]);
-			free(reslt);
+			for (k = 0; k < j; k++)
+				free(s[k]);
+			free(s);
 			return (NULL);
 		}
-		for (varm = 0; varm < vark; varm++)
-			reslt[varj][varm] = dstrs[iterator++];
-		reslt[varj][varm] = 0;
+		for (m = 0; m < k; m++)
+			s[j][m] = str[i++];
+		s[j][m] = 0;
 	}
-	reslt[varj] = NULL;
-	return (reslt);
+	s[j] = NULL;
+	return (s);
 }

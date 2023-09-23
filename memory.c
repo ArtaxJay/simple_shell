@@ -1,19 +1,18 @@
 #include "shell.h"
 
 /**
- * freepts - freez pters && NULL's addr
- * @pter: the addr of pterz to be freed
+ * bfree - frees a pointer and NULLs the address
+ * @ptr: address of the pointer to free
+ *
  * Return: 1 if freed, otherwise 0.
  */
-
-int freepts(void **pter)
+int bfree(void **ptr)
 {
-	if (pter && *pter)
+	if (ptr && *ptr)
 	{
-		free(*pter);
-		*pter = NULL;
+		free(*ptr);
+		*ptr = NULL;
 		return (1);
 	}
-
 	return (0);
 }

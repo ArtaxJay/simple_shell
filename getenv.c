@@ -1,16 +1,16 @@
 #include "shell.h"
 
 /**
- * get_envment - ret strng arr cpy of our envnment vars
- * @info: struct var
- * Return: only success
+ * get_environ - returns the string array copy of our environ
+ * @info: Structure containing potential arguments. Used to maintain
+ *          constant function prototype.
+ * Return: Always 0
  */
-
-char **get_envment(information_t *info)
+char **get_environ(info_t *info)
 {
 	if (!info->environ || info->env_changed)
 	{
-		info->environ = ret_array_of_strs(info->env);
+		info->environ = list_to_strings(info->env);
 		info->env_changed = 0;
 	}
 
@@ -18,79 +18,76 @@ char **get_envment(information_t *info)
 }
 
 /**
- * _remenvvariable - rem envnment vars
- * @info: struc param
- * @evnvar: strng env vars
- *  Return: always -- 1 on delete, 0 otherwise
+ * _unsetenv - Remove an environment variable
+ * @info: Structure containing potential arguments. Used to maintain
+ *        constant function prototype.
+ *  Return: 1 on delete, 0 otherwise
+ * @var: the string env var property
  */
-
-int _remenvvariable(information_t *info, char *evnvar)
+int _unsetenv(info_t *info, char *var)
 {
-	lists_t *node = info->env;
-	size_t iterator;
-	char *ptrs;
+	list_t *node = info->env;
+	size_t i = 0;
+	char *p;
 
-	if (!node || !evnvar)
+	if (!node || !var)
 		return (0);
 
-	for (iterator = 0; node; iterator++)
+	while (node)
 	{
-		ptrs = haystack_needle(node->str, evnvar);
-
-		if (ptrs && *ptrs == '=')
+		p = starts_with(node->str, var);
+		if (p && *p == '=')
 		{
-			info->env_changed = del_dgiven_node(&(info->env), iterator);
-			iterator = 0;
+			info->env_changed = delete_node_at_index(&(info->env), i);
+			i = 0;
 			node = info->env;
 			continue;
 		}
 		node = node->next;
+		i++;
 	}
-
 	return (info->env_changed);
 }
 
 /**
- * _initnewvar - init new env vars || modify existng ones
- * @info: param for struct
- * @strenvvar: strng env var properties
- * @strenvval: strng env vars vals
- *  Return: if success = 0
+ * _setenv - Initialize a new environment variable,
+ *             or modify an existing one
+ * @info: Structure containing potential arguments. Used to maintain
+ *        constant function prototype.
+ * @var: the string env var property
+ * @value: the string env var value
+ *  Return: Always 0
  */
-
-int _initnewvar(information_t *info, char *strenvvar, char *strenvval)
+int _setenv(info_t *info, char *var, char *value)
 {
-	char *bffer = NULL;
-	lists_t *node;
-	char *ptrz;
+	char *buf = NULL;
+	list_t *node;
+	char *p;
 
-	if (!strenvvar || !strenvval)
+	if (!var || !value)
 		return (0);
 
-	bffer = malloc(_len_of_str(strenvvar) + _len_of_str(strenvval) + 2);
-	if (!bffer)
+	buf = malloc(_strlen(var) + _strlen(value) + 2);
+	if (!buf)
 		return (1);
-	_strscopier(bffer, strenvvar);
-	_concatstr(bffer, "=");
-	_concatstr(bffer, strenvval);
+	_strcpy(buf, var);
+	_strcat(buf, "=");
+	_strcat(buf, value);
 	node = info->env;
-
 	while (node)
 	{
-		ptrz = haystack_needle(node->str, strenvvar);
-		if (ptrz && *ptrz == '=')
+		p = starts_with(node->str, var);
+		if (p && *p == '=')
 		{
 			free(node->str);
-			node->str = bffer;
+			node->str = buf;
 			info->env_changed = 1;
 			return (0);
 		}
 		node = node->next;
 	}
-
-	add_nd_to_list_end(&(info->env), bffer, 0);
-	free(bffer);
+	add_node_end(&(info->env), buf, 0);
+	free(buf);
 	info->env_changed = 1;
-
 	return (0);
 }

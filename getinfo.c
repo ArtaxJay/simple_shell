@@ -1,11 +1,10 @@
 #include "shell.h"
 
 /**
- * kill_info_struct - inits struc information_t
- * @info: struct param addr
+ * clear_info - initializes info_t struct
+ * @info: struct address
  */
-
-void kill_info_struct(information_t *info)
+void clear_info(info_t *info)
 {
 	info->arg = NULL;
 	info->argv = NULL;
@@ -14,70 +13,62 @@ void kill_info_struct(information_t *info)
 }
 
 /**
- * init_info_struct - initz struc information_t
- * @info: param struc addr
- * @argvec: the arg vector. NO RETURN
+ * set_info - initializes info_t struct
+ * @info: struct address
+ * @av: argument vector
  */
-
-void init_info_struct(information_t *info, char **argvec)
+void set_info(info_t *info, char **av)
 {
-	int i;
+	int i = 0;
 
-	i = 0;
-
-	info->fname = argvec[0];
-
+	info->fname = av[0];
 	if (info->arg)
 	{
-		info->argv = splitstrs(info->arg, " \t");
+		info->argv = strtow(info->arg, " \t");
 		if (!info->argv)
 		{
 
 			info->argv = malloc(sizeof(char *) * 2);
 			if (info->argv)
 			{
-				info->argv[0] = _duplic_string(info->arg);
+				info->argv[0] = _strdup(info->arg);
 				info->argv[1] = NULL;
 			}
 		}
-
-		while (info->argv && info->argv[i])
-			i++;
-
+		for (i = 0; info->argv && info->argv[i]; i++)
+			;
 		info->argc = i;
 
-		repl_tork_alias(info);
-		repl_vars_tok_strs(info);
+		replace_alias(info);
+		replace_vars(info);
 	}
 }
 
 /**
- * fr_info_struct - this frees struc information_t fields
- * @info: param struc addr
- * @freedall: set TRUE if all fields are freed
+ * free_info - frees info_t struct fields
+ * @info: struct address
+ * @all: true if freeing all fields
  */
-
-void fr_info_struct(information_t *info, int freedall)
+void free_info(info_t *info, int all)
 {
-	disectfree(info->argv);
+	ffree(info->argv);
 	info->argv = NULL;
 	info->path = NULL;
-
-	if (freedall)
+	if (all)
 	{
 		if (!info->cmd_buf)
 			free(info->arg);
 		if (info->env)
-			fr_all_node_lists(&(info->env));
+			free_list(&(info->env));
 		if (info->history)
-			fr_all_node_lists(&(info->history));
+			free_list(&(info->history));
 		if (info->alias)
-			fr_all_node_lists(&(info->alias));
-		disectfree(info->environ);
+			free_list(&(info->alias));
+		ffree(info->environ);
 			info->environ = NULL;
-		freepts((void **)info->cmd_buf);
+		bfree((void **)info->cmd_buf);
 		if (info->readfd > 2)
 			close(info->readfd);
-		_ptchars(BUFFER_FLUSH);
+		_putchar(BUF_FLUSH);
 	}
 }

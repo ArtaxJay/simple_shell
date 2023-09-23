@@ -1,124 +1,121 @@
 #include "shell.h"
 
 /**
- * len_of_lnkd_list - determ dlen linkd--list
- * @hdvar: pter to dfirst-nd
- * Return: ret something
+ * list_len - determines length of linked list
+ * @h: pointer to first node
+ *
+ * Return: size of list
  */
-
-size_t len_of_lnkd_list(const lists_t *hdvar)
+size_t list_len(const list_t *h)
 {
-	size_t countlen;
+	size_t i = 0;
 
-	for (countlen = 0; hdvar; countlen++)
-		hdvar = hdvar->next;
-
-	return (countlen);
+	while (h)
+	{
+		h = h->next;
+		i++;
+	}
+	return (i);
 }
 
 /**
- * ret_array_of_strs - ret arr of list=>strng
- * @varhd: pter dhead-nd
- * Return: strngs arr
+ * list_to_strings - returns an array of strings of the list->str
+ * @head: pointer to first node
+ *
+ * Return: array of strings
  */
-
-char **ret_array_of_strs(lists_t *varhd)
+char **list_to_strings(list_t *head)
 {
-	lists_t *node = varhd;
-	size_t iter = len_of_lnkd_list(varhd), seciter;
-	char **varstrng;
-	char *secstrng;
+	list_t *node = head;
+	size_t i = list_len(head), j;
+	char **strs;
+	char *str;
 
-	if (!varhd || !iter)
+	if (!head || !i)
 		return (NULL);
-
-	varstrng = malloc(sizeof(char *) * (iter + 1));
-	if (!varstrng)
+	strs = malloc(sizeof(char *) * (i + 1));
+	if (!strs)
 		return (NULL);
-
-	for (iter = 0; node; node = node->next, iter++)
+	for (i = 0; node; node = node->next, i++)
 	{
-		secstrng = malloc(_len_of_str(node->secstrng) + 1);
-		if (!secstrng)
+		str = malloc(_strlen(node->str) + 1);
+		if (!str)
 		{
-			for (seciter = 0; seciter < iter; seciter++)
-				free(varstrng[seciter]);
-			free(varstrng);
+			for (j = 0; j < i; j++)
+				free(strs[j]);
+			free(strs);
 			return (NULL);
 		}
 
-		secstrng = _strscopier(secstrng, node->secstrng);
-		varstrng[iter] = secstrng;
+		str = _strcpy(str, node->str);
+		strs[i] = str;
 	}
-
-	varstrng[iter] = NULL;
-
-	return (varstrng);
+	strs[i] = NULL;
+	return (strs);
 }
 
 
 /**
- * prnt_all_elem_lst - will prnt all elemz of d lists_t
- * @dhdnd: pter to dhead-nd
- * Return: ret list-size
+ * print_list - prints all elements of a list_t linked list
+ * @h: pointer to first node
+ *
+ * Return: size of list
  */
-
-size_t prnt_all_elem_lst(const lists_t *dhdnd)
+size_t print_list(const list_t *h)
 {
-	size_t counter;
+	size_t i = 0;
 
-	for (counter = 0; dhdnd; counter++)
+	while (h)
 	{
-		_pout_std(con_nums(dhdnd->num, 10, 0));
-		_ptchars(':');
-		_ptchars(' ');
-		_pout_std(dhdnd->str ? dhdnd->str : "(nada)");
-		_pout_std("\n");
-		dhdnd = dhdnd->next;
+		_puts(convert_number(h->num, 10, 0));
+		_putchar(':');
+		_putchar(' ');
+		_puts(h->str ? h->str : "(nil)");
+		_puts("\n");
+		h = h->next;
+		i++;
 	}
-
-	return (counter);
+	return (i);
 }
 
 /**
- * nd_with_prefix_start - prnt d-nd with a prefix
- * @fdnd: pter to d nd-head
- * @ndprefx: search for this arg-str-type
- * @c: d nxt charac after ndprefx to search
- * Return: find nd || NULL
+ * node_starts_with - returns node whose string starts with prefix
+ * @node: pointer to list head
+ * @prefix: string to match
+ * @c: the next character after prefix to match
+ *
+ * Return: match node or null
  */
-
-lists_t *nd_with_prefix_start(lists_t *fdnd, char *ndprefx, char c)
+list_t *node_starts_with(list_t *node, char *prefix, int c)
 {
-	char *pter = NULL;
+	char *p = NULL;
 
-	while (fdnd)
+	while (node)
 	{
-		pter = haystack_needle(fdnd->str, ndprefx);
-
-		if (pter && ((c == -1) || (*pter == c)))
-			return (fdnd);
-
-		fdnd = fdnd->next;
+		p = starts_with(node->str, prefix);
+		if (p && ((c == -1) || (*p == c)))
+			return (node);
+		node = node->next;
 	}
 	return (NULL);
 }
 
 /**
- * gt_index_of_nodes - gts the positions of nds
- * @lshead: pter to dlist-hed
- * @ndpter: pter to dnd
- * Return: index of nd or -1
+ * get_node_index - gets the index of a node
+ * @head: pointer to list head
+ * @node: pointer to the node
+ *
+ * Return: index of node or -1
  */
-ssize_t gt_index_of_nodes(lists_t *lshead, lists_t *ndpter)
+ssize_t get_node_index(list_t *head, list_t *node)
 {
 	size_t i = 0;
 
-	while (lshead)
+	while (head)
 	{
-		if (lshead == ndpter)
+		if (head == node)
 			return (i);
-		lshead = lshead->next;
+		head = head->next;
 		i++;
 	}
 	return (-1);

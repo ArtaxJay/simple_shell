@@ -1,90 +1,87 @@
 #include "shell.h"
 
 /**
- * _strscopier - func copies charac by strs
- * @whereto: d destintn to str to
- * @fromwhere: d str receiver
- * Return: pter to destintn
+ * _strcpy - copies a string
+ * @dest: the destination
+ * @src: the source
+ *
+ * Return: pointer to destination
  */
-
-char *_strscopier(char *whereto, char *fromwhere)
+char *_strcpy(char *dest, char *src)
 {
-	int iterator;
+	int i = 0;
 
-	if (fromwhere == 0 || whereto == fromwhere)
-		return (whereto);
-
-	for (iterator = 0; fromwhere[iterator]; iterator++)
-		whereto[iterator] = fromwhere[iterator];
-
-	whereto[iterator] = 0;
-	return (whereto);
+	if (dest == src || src == 0)
+		return (dest);
+	while (src[i])
+	{
+		dest[i] = src[i];
+		i++;
+	}
+	dest[i] = 0;
+	return (dest);
 }
 
 /**
- * _duplic_string - duplic strs
- * @dstrs: dstrs to duplic
- * Return: ret pter to the duplic strs
+ * _strdup - duplicates a string
+ * @str: the string to duplicate
+ *
+ * Return: pointer to the duplicated string
  */
-
-char *_duplic_string(const char *dstrs)
+char *_strdup(const char *str)
 {
-	int varlen = 0;
-	char *valret;
+	int length = 0;
+	char *ret;
 
-	if (dstrs == NULL)
+	if (str == NULL)
 		return (NULL);
-
-	while (*dstrs++)
-		varlen++;
-
-	valret = malloc(sizeof(char) * (varlen + 1));
-	if (!valret)
+	while (*str++)
+		length++;
+	ret = malloc(sizeof(char) * (length + 1));
+	if (!ret)
 		return (NULL);
-
-	for (varlen++; varlen--;)
-		valret[varlen] = *--dstrs;
-
-	return (valret);
+	for (length++; length--;)
+		ret[length] = *--str;
+	return (ret);
 }
 
 /**
- *_pout_std - pouts some strs input
- *@dstrs: dstrs to be prntd
- * Return: VOID
+ *_puts - prints an input string
+ *@str: the string to be printed
+ *
+ * Return: Nothing
  */
-
-void _pout_std(char *dstrs)
+void _puts(char *str)
 {
-	int iterater;
+	int i = 0;
 
-	if (!dstrs)
+	if (!str)
 		return;
-
-	for (iterater = 0; dstrs[iterater] != '\0'; iterater++)
+	while (str[i] != '\0')
 	{
-		_ptchars(dstrs[iterater]);
+		_putchar(str[i]);
+		i++;
 	}
 }
 
 /**
- * _ptchars - wrts d charac to d STD_OUTPUT
- * @charac: charac to BE prntd
- * Return: On success 1
+ * _putchar - writes the character c to stdout
+ * @c: The character to print
+ *
+ * Return: On success 1.
+ * On error, -1 is returned, and errno is set appropriately.
  */
-
-int _ptchars(char charac)
+int _putchar(int c)
 {
-	static int iterator;
-	static char buf[WRITE_BUFFER_SIZES];
+	static int i;
+	static char buf[WRITE_BUF_SIZE];
 
-	if (charac == BUFFER_FLUSH || iterator >= WRITE_BUFFER_SIZES)
+	if (c == BUF_FLUSH || i >= WRITE_BUF_SIZE)
 	{
-		write(1, buf, iterator);
-		iterator = 0;
+		write(1, buf, i);
+		i = 0;
 	}
-
-	if (charac != BUFFER_FLUSH)
-		buf[iterator++] = charac;
+	if (c != BUF_FLUSH)
+		buf[i++] = c;
 	return (1);
 }

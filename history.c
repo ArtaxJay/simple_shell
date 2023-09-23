@@ -1,151 +1,143 @@
 #include "shell.h"
 
 /**
- * gt_hist_fle - the func gts the hist file
- * @info: struc param
- * Return: on success = 0
+ * get_history_file - gets the history file
+ * @info: parameter struct
+ *
+ * Return: allocated string containg history file
  */
 
-char *gt_hist_fle(information_t *info)
+char *get_history_file(info_t *info)
 {
-	char *gtbuffer, *gtdir;
+	char *buf, *dir;
 
-	gtdir = _gtenvvarval(info, "HOME=");
-	if (!gtdir)
+	dir = _getenv(info, "HOME=");
+	if (!dir)
 		return (NULL);
-	gtbuffer = malloc(sizeof(char) *
-	(_len_of_str(gtdir) + _len_of_str(FILE_HISTORY) + 2));
-	if (!gtbuffer)
+	buf = malloc(sizeof(char) * (_strlen(dir) + _strlen(HIST_FILE) + 2));
+	if (!buf)
 		return (NULL);
-	gtbuffer[0] = 0;
-	_strscopier(gtbuffer, gtdir);
-	_concatstr(gtbuffer, "/");
-	_concatstr(gtbuffer, FILE_HISTORY);
-	return (gtbuffer);
+	buf[0] = 0;
+	_strcpy(buf, dir);
+	_strcat(buf, "/");
+	_strcat(buf, HIST_FILE);
+	return (buf);
 }
 
 /**
- * wrt_hist - wrt hist
- * @info: the arg param struc
- * Return: 1 if successful, and -1
+ * write_history - creates a file, or appends to an existing file
+ * @info: the parameter struct
+ *
+ * Return: 1 on success, else -1
  */
-
-int wrt_hist(information_t *info)
+int write_history(info_t *info)
 {
-	ssize_t filed;
-	char *fname = gt_hist_fle(info);
-	lists_t *node = NULL;
+	ssize_t fd;
+	char *filename = get_history_file(info);
+	list_t *node = NULL;
 
-	if (!fname)
+	if (!filename)
 		return (-1);
 
-	filed = open(fname, O_CREAT | O_TRUNC | O_RDWR, 0644);
-	free(fname);
-	if (filed == -1)
+	fd = open(filename, O_CREAT | O_TRUNC | O_RDWR, 0644);
+	free(filename);
+	if (fd == -1)
 		return (-1);
 	for (node = info->history; node; node = node->next)
 	{
-		_putsfnd(node->str, filed);
-		_eeputts('\n', filed);
+		_putsfd(node->str, fd);
+		_putfd('\n', fd);
 	}
-	_eeputts(BUFFER_FLUSH, filed);
-	close(filed);
+	_putfd(BUF_FLUSH, fd);
+	close(fd);
 	return (1);
 }
 
 /**
- * rd_hist - rds shell hist cmds frm file
- * @info: arg-param struc
- * Return: returns the shell hist value
+ * read_history - reads history from file
+ * @info: the parameter struct
+ *
+ * Return: histcount on success, 0 otherwise
  */
-
-int rd_hist(information_t *info)
+int read_history(info_t *info)
 {
-	int i, lthist = 0, numline = 0;
-	ssize_t fidir, redleng, file_size = 0;
+	int i, last = 0, linecount = 0;
+	ssize_t fd, rdlen, fsize = 0;
 	struct stat st;
-	char *bvar = NULL, *flnames = gt_hist_fle(info);
+	char *buf = NULL, *filename = get_history_file(info);
 
-	if (!flnames)
+	if (!filename)
 		return (0);
-	fidir = open(flnames, O_RDONLY);
-	free(flnames);
-	if (fidir == -1)
+
+	fd = open(filename, O_RDONLY);
+	free(filename);
+	if (fd == -1)
 		return (0);
-	if (!fstat(fidir, &st))
-		file_size = st.st_size;
-	if (file_size < 2)
+	if (!fstat(fd, &st))
+		fsize = st.st_size;
+	if (fsize < 2)
 		return (0);
-	bvar = malloc(sizeof(char) * (file_size + 1));
-	if (!bvar)
+	buf = malloc(sizeof(char) * (fsize + 1));
+	if (!buf)
 		return (0);
-	redleng = read(fidir, bvar, file_size);
-	bvar[file_size] = 0;
-	if (redleng <= 0)
-		return (free(bvar), 0);
-	close(fidir);
-	for (i = 0; i < file_size; i++)
-	{
-		if (bvar[i] == '\n')
+	rdlen = read(fd, buf, fsize);
+	buf[fsize] = 0;
+	if (rdlen <= 0)
+		return (free(buf), 0);
+	close(fd);
+	for (i = 0; i < fsize; i++)
+		if (buf[i] == '\n')
 		{
-			bvar[i] = 0;
-			add_entry_tohist(info, bvar + lthist, numline++);
-			lthist = i + 1;
+			buf[i] = 0;
+			build_history_list(info, buf + last, linecount++);
+			last = i + 1;
 		}
-	}
-	if (lthist != i)
-		add_entry_tohist(info, bvar + lthist, numline++);
-	free(bvar);
-	info->histcount = numline;
-	while (info->histcount-- >= MAXIMUM_HISTORY_NUMBER)
-		del_dgiven_node(&(info->history), 0);
-	chng_hist_num(info);
+	if (last != i)
+		build_history_list(info, buf + last, linecount++);
+	free(buf);
+	info->histcount = linecount;
+	while (info->histcount-- >= HIST_MAX)
+		delete_node_at_index(&(info->history), 0);
+	renumber_history(info);
 	return (info->histcount);
 }
 
 /**
- * add_entry_tohist - append new cmds to hist
- * @info: the arg-param struct
- * @bhere: the BUFFER
- * @countline: the hist counter
- * Return: on success 0
+ * build_history_list - adds entry to a history linked list
+ * @info: Structure containing potential arguments. Used to maintain
+ * @buf: buffer
+ * @linecount: the history linecount, histcount
+ *
+ * Return: Always 0
  */
-
-int add_entry_tohist(information_t *info, char *bhere, int countline)
+int build_history_list(info_t *info, char *buf, int linecount)
 {
-	lists_t *node = NULL;
+	list_t *node = NULL;
 
 	if (info->history)
-	{
 		node = info->history;
-	}
-
-	add_nd_to_list_end(&node, bhere, countline);
+	add_node_end(&node, buf, linecount);
 
 	if (!info->history)
-	{
 		info->history = node;
-	}
-
 	return (0);
 }
 
 /**
- * chng_hist_num - reorder the hist-list after adjusment
- * @info: the arg-param for struc
- * Return: ret the new hist-list
+ * renumber_history - renumbers the history linked list after changes
+ * @info: Structure containing potential arguments. Used to maintain
+ *
+ * Return: the new histcount
  */
-
-int chng_hist_num(information_t *info)
+int renumber_history(info_t *info)
 {
-	lists_t *node = info->history;
-	int iterator = 0;
+	list_t *node = info->history;
+	int i = 0;
 
 	while (node)
 	{
-		node->num = iterator++;
+		node->num = i++;
 		node = node->next;
 	}
-
-	return (info->histcount = iterator);
+	return (info->histcount = i);
 }
